@@ -1,0 +1,86 @@
+//- Marge sur le côté pour les grands écrans
+.col-lg-1
+
+//- Panneau de liste des discussions et des utilisateurs
+.col-lg-3.col-md-4.col-xs-12
+	.panel.panel-primary#userListId(ng-style='containerHeight')
+		.panel-body(style='')
+			uib-tabset(justified='true', type='pills')
+				uib-tab(heading='Conversations en cours')
+					// hr
+					br
+					div(ng-style='innerHeightConvs', style='overflow-y: auto;')
+						.list-group
+							a.list-group-item(href="", ng-repeat='conv in convs', ng-click='addConv(conv.id)',
+						style="border-left: none; border-right: none; border-radius: 0; height: 80px; vertical-align:middle;")
+								h4.list-group-item-heading {{conv.name}}
+								p.list-group-item-text(style='overflow: hidden;', ng-if='!conv.public')
+									span(ng-repeat='u in conv.users', style='margin-left: 5px;')
+										| {{username(u)}}
+										span(ng-if='!$last') ,
+								p.list-group-item-text(style='overflow: hidden;', ng-if='conv.public')
+									| Public channel
+
+
+				uib-tab(heading='Utilisateurs connectés')
+					// hr
+					br
+					p Pas encore disponible
+					.list-group
+						a.list-group-item(ng-repeat='user in users', href='', ng-click='addDiscussion(user.name)',
+							style='border: none;') {{user.name}}
+			
+//- Panneau de dialogue
+.col-lg-7.col-md-8.col-xs-12
+	.panel.panel-primary(ng-style='containerHeight')
+		.panel-body
+			uib-tabset
+				uib-tab(ng-repeat='tab in tabs', active='tab.active')
+					uib-tab-heading
+						| {{tab.title}}
+						a(ng-click='tab.modeGraphic = !tab.modeGraphic', style='margin-left: 5px;', href='')
+							i.glyphicon.glyphicon-option-vertical(uib-tooltip="Passer en mode Texte/Graphique", tooltip-placement="bottom")
+						a(ng-click='closeDiscussion(tab.title)', style='margin-left: 5px;', href='')
+							i.glyphicon.glyphicon-remove(uib-tooltip="Fermer la discussion en cours", tooltip-placement="right")
+					div.panel.panel-default.scrollMessages(style='overflow: auto; border-top: none; border-radius: 0px;', 
+						ng-style='innerHeight', scroll-glue='tab.scrollBottom')
+						.panel-body
+							.col-xs-12(style="text-align: center;")
+								a(href="", ng-click="getPrevious(tab.convId)", ng-if="tab.previous")
+									| Charger les messages précédents
+
+							//- Interface avancée
+							.col-xs-12(style="font-family: helvetica,arial,sans-serif; font-size: 13px; background-color: white; color: black;")
+
+								div.col-xs-12(ng-repeat="m in tab.messages", ng-if='!tab.modeGraphic', style="padding: 0; margin: 0;")
+									div.col-xs-12
+										div(style="border-top: 1px solid #E8E8E8; width: 80%; margin: 30px auto 0 auto; font-size: 11px; text-align: center;",
+												ng-if="showDateLine(tab.messages, $index)")
+											span(style="color: #BDC1C9; position: relative; top: -8px; background: #fff; padding: 0px 5px;"
+												) {{m.date | date: "EEEE"}}
+
+									div.col-xs-12
+										p(style="font-weight: bold; margin-top: 20px;",
+											ng-if="tab.messages[$index-1].author !== m.author || showDateLine(tab.messages, $index)")
+											a(href="/account/{{m.author}}/", style="color: #3B5998;")
+												| {{username(m.author)}}
+										pre.col-xs-10(style="background: none; border: none; padding: 0px; margin: 0px;")
+											| {{m.content}}
+										.col-xs-2(style="color: #BDC1C9;") {{m.date | date: 'HH:mm dd/MM'}}
+								
+
+								//- Interface type IRC
+								.col-xs-12(ng-repeat='m in tab.messages', ng-if='tab.modeGraphic', style='color: black;', ng-style="colorLine($index)")
+									small <{{m.date | date: 'HH:mm dd/MM'}}>
+									b {{username(m.author)}} :
+									pre(style='display: inline; background: none; border: none; color: inherit;') {{m.content}}
+									br
+
+
+					div(ng-style='bottomHeight')
+						form
+							textarea.col-sm-10.col-xs-8(style='resize: none; overflow: visible; height: 60px; border: 1px #CCC solid;',
+								placeholder='Ecrivez un message à envoyer...', ng-model='tab.textModel', ng-enter='sendMessage(tab.convId)')
+							.col-sm-2.col-xs-4(style='text-align: center;')
+								input.btn.btn-primary(type='submit', value="Envoyer", style='margin: auto;', ng-click='sendMessage(tab.convId)')
+

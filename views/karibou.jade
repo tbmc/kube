@@ -1,0 +1,105 @@
+doctype html
+html(ng-app='app')
+	head(ng-controller="headController")
+		meta(charset="UTF-8")
+		meta(name='viewport', content='width=device-width, user-scalable=no')
+
+		link(rel="icon", href="/images/favicon.ico")
+		//link(rel='stylesheet', href='/assets/bootstrap.min.css')
+		link(ng-href='/themes/{{link}}', rel='stylesheet')
+		link(rel='stylesheet', href='/assets/all.css')
+
+		title
+			| Accueil
+			| : Karibou
+
+		base(href="/")
+	body(ng-controller='allPageController')
+		nav.navbar.navbar-inverse.navbar-static-top(role='navigation')
+			.navbar-header
+				button.navbar-toggle(type='button', ng-init='navCollapsed = true', ng-click='navCollapsed = !navCollapsed')
+					span.sr-only Toggle
+					span.icon-bar
+					span.icon-bar
+					span.icon-bar
+				a.navbar-brand(href='/')
+					img(src="/images/k3_white.png", alt="Karibou v3", height="20")
+
+			.collapse.navbar-collapse(ng-class='!navCollapsed && "in"')
+				ul.nav.navbar-nav
+					li(ng-repeat='m in menus', ng-class="{active: m.active}",
+							ng-attr-uib-dropdown='{{m.dropdown}}')
+						a(href='{{m.path}}', ng-if='!m.dropdown') {{m.title}}
+						a(ng-if='m.dropdown', href='', uib-dropdown-toggle) {{m.title}}
+							b.caret(style='margin-left: 5px;')
+						ul.uib-dropdown-menu
+							li(ng-repeat='d in m.dropdown', ng-class="{divider: d.separator, active: d.active}")
+								a(href='{{d.path}}', ng-if='!d.separator') {{d.title}}
+
+				form.navbar-form.navbar-right(role='Connection', style='border-left: 1px solid gray; margin-right: 5px;', ng-if='!isConnected')
+					.form-group
+						input.form-control(type='text', placeholder='Login', ng-model='login')
+						| &emsp;
+						input.form-control(type='password', placeholder='Password', ng-model='password')
+						| &emsp;
+					input.btn.btn-default(type='submit', ng-click='connect(login, password)')
+					//input.btn.btn-default(type='button', ng-click='disconnect()', value='Déconnecter')
+
+				ul.nav.navbar-nav.navbar-right(style='border-left: 1px solid gray; margin-right: 5px;', ng-if='isConnected')
+					li(ng-if='isConnected === 1')
+						a
+							| Connexion en cours...
+
+					li(ng-if='isConnected === 2', uib-dropdown)
+						a(href, uib-dropdown-toggle)
+							| {{username}}
+							b.caret(style='margin-left: 5px;')
+						ul.uib-dropdown-menu
+							li
+								a(href='', ng-click='disconnect()') Je veux me déconnecter.
+						// Faire une popup pour demander si oui ou non on veut se délogguer
+
+					li(ng-if='isConnected === 3')
+						a(href='', ng-click='retry_login()', style='color: red;')
+							| Connexion échouée
+							b.caret(style='margin-left: 5px;')
+
+
+		div(ng-if="isConnected !== 2 && !isAllowedPage() && (isConnected !== 1 || !previousConnection)")
+			.col-md-3
+			.col-md-6.col-xs-12(ng-if='!previousConnection && isConnected !== 1')
+				.panel.panel-danger
+					.panel-heading
+						h5(style='text-align: center;') Vous n'êtes pas connecté
+
+					.panel-body
+						p
+							| Vous devez être connecté pour avoir accès à cette section.
+							br
+							| Veuillez utiliser le champ en haut à droite et rentrer vos identifiants de connexion.
+							br
+							| Si votre identifiants ne fonctionnent pas, veuillez contacter le club telnet.
+							
+			.col-md-6.col-xs-12(ng-if='!previousConnection && isConnected === 1')
+				.panel.panel-primary
+					.panel-heading Connexion en cours
+					.panel-body
+						div(style="vertical-align: middle;")
+							i.glyphicon.glyphicon-info-sign(style="font-size: 2.5em; vertical-align: middle; margin-right: 10px; color: #5bc0de;")
+							| La connexion est en cours...
+							br
+							center
+								uib-progressbar.progress-striped.active(type='default',
+									style='width: 25%; border-radius: 30px; display: inline-block; vertical-align: middle; margin-left: 10px;') Connexion...
+
+
+		div.animatedView(ng-view, ng-if="isConnected === 2 || isAllowedPage() || (isConnected === 1 && previousConnection)")
+
+		script(src='/assets/all.js')
+		script
+			| ;window.themesList = 
+			!= JSON.stringify(themes)
+			| ;
+			
+		
+

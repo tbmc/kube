@@ -1,0 +1,47 @@
+
+.col-xl-2.col-lg-1
+
+.col-xl-8.col-lg-10.col-md-12.col-xs-12
+	.panel.panel-primary
+		.panel-heading Choisissez un thème
+		.panel-body
+
+			uib-alert(type="warning")
+				i.glyphicon.glyphicon-warning-sign(style="margin-right: 20px; font-size: 1.5em;")
+				| Seul le thème principal est supporté, il est possible d'avoir des problèmes d'affichage avec les thèmes supplémentaires.
+
+			.col-md-6.col-xs-12
+				h2 Liste des thèmes
+				center
+					ul.list-group()
+						a.list-group-item(ng-repeat='t in themesList', href='', ng-click='themef(t)',
+							style='text-align: left;', ng-class="{active: t === selectedTheme}") {{t | removeExtension : ".min.css"}}
+
+			.col-md-1
+				
+			.col-md-5.col-xs-12
+				h2 Thème sur les différents éléments
+				.page-header Boutons (comprenant toutes les couleurs utilisées)
+				.well.well-sm
+					button.btn.btn-default Bouton défaut
+					| &emsp; &emsp;
+					button.btn.btn-primary Bouton principal
+					br
+					br
+					button.btn.btn-info Bouton information
+					| &emsp; &emsp;
+					button.btn.btn-warning Bouton attention
+					br
+					br
+					button.btn.btn-danger Bouton danger
+					| &emsp; &emsp;
+
+
+				//-.page-header Message du chat
+				//-.well.well-sm
+					.label.label-primary(style="margin-left: 10px;") Envoyeur
+					pre Ceci est un message
+
+				.page-header Liens
+				.well.well-sm
+					a(href='') Lien vers la page principale

@@ -1,0 +1,100 @@
+
+
+.col-xl-2.col-lg-1
+
+.col-xl-3.col-lg-3.col-md-4.col-xs-12
+	.panel.panel-primary
+		.panel-heading Liste des fichiers
+		.panel-body
+			ol.breadcrumb
+				li(ng-repeat='p in path')
+					a(href='/files/{{p.name}}?path={{p.path}}', ng-if='!$last') {{p.name}}
+					span(ng-if='$last') {{p.name}}
+
+.col-xl-5.col-lg-7.col-md-8.col-xs-12
+	.panel.panel-primary
+		.panel-heading
+			button.btn.btn-default(style="margin-right: 20px;", uib-tooltip="Retour en arrière",
+			tooltip-placement="bottom")
+				i.glyphicon.glyphicon-arrow-left
+
+			| Chemin du fichier
+
+			button.btn.btn-default(style="float: right;", uib-tooltip="Ajouter des fichiers",
+			tooltip-placement="bottom", ng-click="openUploadModal()")
+				i.glyphicon.glyphicon-plus-sign
+
+		.panel-body
+
+script(type="text/ng-template", id="uploadFileModel.html")
+	.modal-header
+		h3.modal-title
+			i.glyphicon.glyphicon-open(style="margin-right:20px; float:left;")
+			div(style="text-align: center;")
+				| Ajouter des fichiers
+	.modal-body
+		p.
+			Ajouter les fichiers dans : {{path}}
+		p
+			br
+			input(type="file", nv-file-select="", uploader="uploader", multiple="")
+			br
+			| ou
+
+		div(nv-file-drop="", uploader="uploader")
+			.well.well-lg(style="border: 5px dashed lightgray;", ng-style="dropStyle",
+				nv-file-over="", uploader="uploader")
+				div(style="text-align: center; color: lightgray; font-size: 5em; text-decoration: bold;")
+					| Déposer vos fichiers ici
+
+		table.table
+			thead
+				th(width="50%") Nom du fichier
+				th(ng-show="uploader.isHTML5") Taille
+				th(ng-show="uploader.isHTML5") Progression
+				th Status
+				th Actions
+			tbody
+				tr(ng-repeat="item in uploader.queue")
+					td
+						strong {{item.file.name}}
+					td(ng-show="uploader.isHTML5", nowrap="") {{item.file.size}}
+					td(ng-show="uploader.isHTML5")
+						.progress(style="margin-bottom: 0;")
+							.progress-bar(role="progressbar", ng-style="{'width': item.progress + '%'}")
+					td.text-center
+						span(ng-show="item.isSuccess")
+							i.glyphicon.glyphicon-ok
+						span(ng-show="item.isCancel")
+							i.glyphicon.glyphicon-ban-circle
+						span(ng-show="item.isError")
+							i.glyphicon.glyphicon-remove
+					td(nowrap="")
+						button.btn.btn-success.btn-xs(type="button", ng-click="item.upload()", ng-disabled="item.isReady || item.isUploading || item.isSuccess")
+							span.glyphicon.glyphicon-upload
+							| Téléverser
+						button.btn.btn-warning.btn-xs(type="button", ng-click="item.cancel()", ng-disabled="!item.isUploading")
+							span.glyphicon.glyphicon-ban-circle
+							| Annuler
+						button.btn.btn-danger.btn-xs(type="button", ng-click="item.remove()", ng-disabled="!uploader.queue.length")
+							span.glyphicon.glyphicon-trash
+							| Supprimer
+		div
+			div
+				| Progression
+				.progress
+					.progress-bar(role="progressbar", ng-style="{width: uploader.progress + '%'}")
+			button.btn.btn-success.btn-s(type="button", ng-click="uploader.uploadAll()", ng-disabled="!uploader.getNotUploadedItems().length")
+				span.glyphicon.glyphicon-upload
+				| Tout téléverser
+			button.btn.btn-warning.btn-s(type="button", ng-click="uploader.cancelAll()", ng-disabled="!uploader.isUploading")
+				span.glyphicon.glyphicon-ban-circle
+				| Tout annuler
+			button.btn.btn-danger.btn-s(type="button", ng-click="uploader.clearQueue()", ng-disabled="!uploader.queue.length")
+				span.glyphicon.glyphicon-trash
+				| Tout supprimer
+				
+
+	.modal-footer
+		button.btn.btn-primary(type="button", ng-click="close()")
+			| Fermer

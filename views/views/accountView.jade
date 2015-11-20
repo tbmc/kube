@@ -1,0 +1,21 @@
+
+.col-xl-2.col-lg-1
+
+.col-xl-8.col-lg-10.col-md-12.col-xs-12
+	.panel.panel-primary
+		//.panel-heading Votre compte
+		.panel-body
+			h1(style="text-align: center;")
+				//.label.label-primary 
+				| {{accountTitle}}
+			.row
+				.col-xs-2
+				.col-xs-8(style="margin-bottom: 20px;")
+					hr
+				.col-xs-2
+			.form-horizontal.row
+				.form-group(ng-repeat="t in tab")
+					label.col-sm-3.control-label(for="{{t.title}}ID") {{t.title}}
+					.col-sm-7
+						input.form-control(type="{{t.type}}", id="{{t.title}}ID", readonly, ng-value="t.data", style="background-color: white; box-shadow: none; border-color: initial;")
+					.col-sm-2
