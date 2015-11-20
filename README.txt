@@ -1,0 +1,1 @@
+Installer nodejs et lancer le fichier launch.bat ou launch.sh (en fonction de l'OS)
