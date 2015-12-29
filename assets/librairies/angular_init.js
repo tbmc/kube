@@ -1,6 +1,7 @@
-var app = angular.module('app', ['ui.bootstrap', 'ngCookies', 'ngResource', 'ngRoute',
-    'ngAnimate', 'luegg.directives', 'duScroll', "angularFileUpload"])
-window.api_server = 'http://okapi.bdetl.org/'
+var app = angular.module('app', ['ui.bootstrap', /*'ngCookies',*/ 'ngResource', 'ngRoute',
+    'ngAnimate', 'luegg.directives', 'duScroll', /*"angularFileUpload"*/])
+
+window.api_server = 'https://okapi.bdetl.org/'
 
 
 // Permet d'activer la touche entrer pour effectuer une action autre que retour à la ligne
@@ -31,21 +32,71 @@ app.filter('removeExtension', ['$filter', function($filter) {
     }
 }])
 
-/*
-app.directive('scrollchat', function() {
+app.directive('fileModel', ['$parse', function ($parse) {
     return {
-        priority: 1,
+        restrict: 'A',
         link: function(scope, element, attrs) {
-                element.attr('scroll-glue', true)
-                element.bind("scroll", function() {
-                    var max = element.prop('scrollHeight') - element.prop('clientHeight')
-                    var s = element.scrollTop()
-                    if(max === s)
-                        element.attr('scroll-glue', true)
-                    else
-                        element.attr('scroll-glue', false)
-                })
+            var model = $parse(attrs.fileModel);
+            var modelSetter = model.assign;
+            
+            element.bind('change', function(){
+                scope.$apply(function(){
+                    modelSetter(scope, element[0].files[0]);
+                });
+            });
+        }
+    };
+}]);
+
+app.service('fileUpload', ['preparedRequest', function (pr) {
+    this.uploadFileToUrl = function(file, uploadUrl, name, parent){
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append("name", "fileName")
+        fd.append("parent", 1)
+        //fd.append("creator", 1)
+
+        var http = pr();
+        http.post(uploadUrl, fd, {
+            transformRequest: angular.identity,
+            processData: false,
+            headers: {
+                "Content-Type": undefined, //"multipart/form-data; boundary=-------border",
+                "Accept": "*/*"
             }
+        })
+        .success(function(){
+        })
+        .error(function(){
+        });
+    }
+}]);
+
+function refreshAngular($scope) {
+    if(!$scope) return
+    if(!$scope.$$phase)
+        $scope.$apply()
+}
+
+app.directive("dropzone", function() {
+    return {
+        restrict: "A",
+        link: function($scope, elem) {
+            //elem.attr("style", "background-color: orange;")
+            elem.bind("drop", function(evt) {
+                evt.stopPropagation()
+                evt.preventDefault()
+
+                var files = evt.dataTransfer.files
+                console.log(files)
+                for(var i = 0, f; f = files[i]; i++) {
+
+                }
+            })
+        }
     }
 })
-*/
+
+function resizeIframe(obj) {
+    obj.style.height = obj.contentWindow.document.body.scrollHeight + "px"
+}

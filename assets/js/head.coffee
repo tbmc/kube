@@ -10,7 +10,7 @@ app.controller 'headController', ["$scope", ($scope) ->
 		$scope.link = defaultValue
 
 	nav = getNavigator()
-	if nav.safari || nav.ie || nav.opera
+	if nav.safari || nav.ie # || nav.opera
 		$scope.link = "lol.css"
 
 	$scope.$on('changingThemeEvent', (event, data) ->
@@ -60,16 +60,50 @@ getNavigator = ->
 	return r
 
 app.factory 'preparedRequest', ["$http", ($http) ->
-
 	return ->
-		$http.defaults.headers.common['Authorization'] = 'Token ' + window.karibou.token
+		token = window.karibou.token
+		if !token or token == "undefined"
+			cookie = localStorage['karibouCookie']
+			if cookie and cookie != "undefined"
+				cookie = JSON.parse cookie
+				token = cookie.token
+		$http.defaults.headers.common['Authorization'] = 'Token ' + token
 		return $http
 ]
+
+app.factory("directoryCache", ["preparedRequest", "$rootScope", (pr, $rootScope) ->
+	cache = {}
+	cache_loading = {}
+	return (id) ->
+		if cache[id]
+			return cache[id]
+		else
+			l = {
+				id: id
+				name: "..."
+			}
+			if cache_loading[id]
+				return l
+			cache_loading[id] = true
+			http = pr()
+			http.get(window.api_server + directoryRoute + id + "/").
+				success((data) ->
+					if data.name == "/"
+						data.name = "Racine"
+					cache[id] = {
+						id: id
+						name: data.name
+					}
+					cache_loading[id] = undefined
+
+				)
+			return l
+])
 
 app.factory 'cache', ['preparedRequest', "$rootScope", (pr, $rootScope) ->
 	#cache = $cookies.getObject("karibouCacheName") || {}
 	cache = localStorage["karibouCacheName"]
-	console.log cache
+	#console.log cache
 	if cache
 		cache = JSON.stringify cache
 	else
@@ -87,10 +121,10 @@ app.factory 'cache', ['preparedRequest', "$rootScope", (pr, $rootScope) ->
 				return l
 			cache_loading[id] = true
 			http = pr()
-			console.log id
+			#console.log id
 			http.get(window.api_server + 'users/users/' + id + '/').
 				success((d) ->
-					console.log d
+					#console.log d
 					cache[d.id] = d.username
 					cache_loading[d.id] = undefined
 					$rootScope.$broadcast("cacheNameChange", cache)

@@ -1,5 +1,5 @@
 doctype html
-html(ng-app='app')
+html(ng-app='app', lang="fr")
 	head(ng-controller="headController")
 		meta(charset="UTF-8")
 		meta(name='viewport', content='width=device-width, user-scalable=no')
@@ -56,7 +56,7 @@ html(ng-app='app')
 							b.caret(style='margin-left: 5px;')
 						ul.uib-dropdown-menu
 							li
-								a(href='', ng-click='disconnect()') Je veux me déconnecter.
+								a(href='', ng-click='disconnect()') Je veux me déconnecter
 						// Faire une popup pour demander si oui ou non on veut se délogguer
 
 					li(ng-if='isConnected === 3')

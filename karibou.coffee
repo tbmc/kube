@@ -1,3 +1,5 @@
+# METTRE TOUS LES THEMES EN DUR DANS LA PAGE POUR AUTORISER L ENVOIE DEPUIS N IMPORTE QUEL SERVEUR
+
 # Fonctions
 setViewRender = (f) ->
 	app.get '/' + f, (req, res) ->

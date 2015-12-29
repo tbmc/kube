@@ -4,29 +4,86 @@
 
 .col-xl-3.col-lg-3.col-md-4.col-xs-12
 	.panel.panel-primary
-		.panel-heading Liste des fichiers
-		.panel-body
-			ol.breadcrumb
-				li(ng-repeat='p in path')
-					a(href='/files/{{p.name}}?path={{p.path}}', ng-if='!$last') {{p.name}}
-					span(ng-if='$last') {{p.name}}
-
-.col-xl-5.col-lg-7.col-md-8.col-xs-12
-	.panel.panel-primary
 		.panel-heading
-			button.btn.btn-default(style="margin-right: 20px;", uib-tooltip="Retour en arrière",
-			tooltip-placement="bottom")
-				i.glyphicon.glyphicon-arrow-left
 
-			| Chemin du fichier
+			button.btn.btn-default(style="margin-right: 20px;", uib-tooltip="Retour en arrière", tooltip-placement="bottom", ng-click="back()")
+				i.glyphicon.glyphicon-arrow-left(ng-if="loading == 0")
+				img(ng-if="loading != 0", src="/images/progress_small.gif", height="14", width="14")
+
+			| Contenu du répertoire
 
 			button.btn.btn-default(style="float: right;", uib-tooltip="Ajouter des fichiers",
-			tooltip-placement="bottom", ng-click="openUploadModal()")
+			tooltip-placement="bottom", ng-click="openUploadPopup()")
 				i.glyphicon.glyphicon-plus-sign
 
 		.panel-body
+			ol.breadcrumb
+				li(ng-repeat="p in path")
+					a(href="", ng-if="!$last", ng-click="loadDirectory(cache(p).id)")
+						| {{cache(p).name}}
+					span(ng-if="$last") {{cache(p).name}}
 
-script(type="text/ng-template", id="uploadFileModel.html")
+			div.list-group
+				a.list-group-item(ng-repeat="e in folders", href="", style="overflow: hidden;",
+						ng-click="loadDirectory(e.id)")
+					p.list-group-item-heading
+						i.glyphicon.glyphicon-folder-open(style="margin-right: 10px;")
+						| {{e.name}}
+					//small.list-group-item-text {{e.url}}
+
+				a.list-group-item(ng-repeat="e in files", href="", style="overflow: hidden;",
+						ng-click="printFile(e.id, e.url)")
+					p.list-group-item-heading
+						i.glyphicon.glyphicon-file(style="margin-right: 10px;")
+						| {{e.name}}
+					//small.list-group-item-text {{e.url}}
+
+.col-xl-5.col-lg-7.col-md-8.col-xs-12
+	.panel.panel-primary
+		.panel-heading Chemin du fichier
+		.panel-body
+
+			.panel.panel-primary(ng-style="containerFrameHeight")
+				.panel-body
+					iframe#iframeContent(style="border: none; width: 100%;", src="data:text/html;charset=utf-8, test des data")
+
+			//div
+				input(type="file", file-model="fileToUpload")
+				br
+				br
+				button.btn.btn-primary(ng-click="uploadFile()") Envoyer
+
+				br
+				br
+				button.btn.btn-primary(ng-click="listFiles()") Lister
+
+
+script(type="text/ng-template", id="uploadFilePopup.html")
+	.modal-header.col-xs-12
+		h3.modal-title
+			i.glyphicon.glyphicon-cloud-upload.col-xs-1
+			div.col-xs-10(style="text-align: center;") Ajouter des fichiers
+			.col-xs-1
+				img(src="/images/progress_small.gif", alt="Infinite progress bar", ng-show="uploadLoading")
+	.modal-body
+		h4.
+			Sélectionner les fichiers à envoyer.
+		input(type="file", file-model="fileToUpload")
+		br
+		.well.well-lg(dropzone, style="border: 5px dashed lightgray; border-radius: 0px; color: #337ab7; text-align: center;")
+			h4 Glisser-déposer les fichiers ici pour les envoyers
+			i.glyphicon.glyphicon-cloud-upload(style="font-size: 3em;")
+
+	.modal-footer
+		.col-xs-12
+			.col-xs-4(style="text-align: left;")
+				button.btn.btn-default(ng-click="close()", ng-disabled="uploadLoading") Fermer
+			.col-xs-8
+				button.btn.btn-danger(ng-click="") Réinitialiser
+				button.btn.btn-success(ng-click="") Envoyer les fichiers
+
+
+//script(type="text/ng-template", id="uploadFileModel.html")
 	.modal-header
 		h3.modal-title
 			i.glyphicon.glyphicon-open(style="margin-right:20px; float:left;")

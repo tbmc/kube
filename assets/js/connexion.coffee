@@ -24,6 +24,7 @@ app.controller 'allPageController', ['$scope', '$http', '$location', '$animate',
 	allowedPages = [
 		'/'
 		'/theme'
+		#"/files" # Uniquement pour le debug offline, à enlever pour la prod
 	]
 
 	$scope.isAllowedPage = ->
@@ -38,7 +39,7 @@ app.controller 'allPageController', ['$scope', '$http', '$location', '$animate',
 		#cookie = $cookies.getObject 'karibouCookie'
 		cookie = localStorage['karibouCookie']
 		console.log cookie, typeof cookie
-		if cookie
+		if cookie and cookie != "undefined"
 			cookie = JSON.parse cookie
 			$scope.previousConnection = true
 			$scope.isConnected = 1
