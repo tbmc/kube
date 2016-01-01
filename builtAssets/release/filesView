@@ -1,0 +1,75 @@
+<!--.col-xl-2.col-lg-1--><!--.col-xl-3.col-lg-3--><div class="col-md-4 col-xs-12"><div class="panel panel-primary"><div class="panel-heading"><button style="margin-right: 20px;" uib-tooltip="Retour en arrière" tooltip-placement="bottom" ng-click="back()" class="btn btn-default"><i ng-if="loading == 0" class="glyphicon glyphicon-arrow-left"></i><img ng-if="loading != 0" src="/images/progress_small.gif" height="14" width="14"/></button>Contenu du répertoire<button style="float: right;" uib-tooltip="Ajouter des fichiers" tooltip-placement="bottom" ng-click="openUploadPopup()" class="btn btn-default"><i class="glyphicon glyphicon-plus-sign"></i></button></div><div class="panel-body"><ol class="breadcrumb"><li ng-repeat="p in path"><a href="" ng-if="!$last" ng-click="loadDirectory(cache(p).id)">{{cache(p).name}}</a><span ng-if="$last">{{cache(p).name}}</span></li></ol><div class="list-group"><a ng-repeat="e in folders" href="" style="overflow: hidden;" ng-click="loadDirectory(e.id)" class="list-group-item"><p class="list-group-item-heading"><i style="margin-right: 10px;" class="glyphicon glyphicon-folder-open"></i>{{e.name}}</p><!--small.list-group-item-text {{e.url}}--></a><a ng-repeat="e in files" href="" style="overflow: hidden;" ng-click="printFile(e.id, e.url, e.name, e.path_ids)" class="list-group-item"><p class="list-group-item-heading"><i style="margin-right: 10px;" class="glyphicon glyphicon-file"></i>{{e.name}}<i style="float: right;font-size: 1.5em;" ng-click="download(e.url, e.name)" class="glyphicon glyphicon-download"></i></p><!--small.list-group-item-text {{e.url}}--></a></div></div></div></div><!--.col-xl-5.col-lg-7--><div class="col-md-8 col-xs-12"><div class="panel panel-primary"><div class="panel-heading"><div ng-if="pathToSelectedFile.path_ids.length &gt; 0" style="display:inline-block; overflow:hidden; max-width:80%; vertical-align: middle;"><span ng-repeat="p in pathToSelectedFile.path_ids">{{cache(p).name}}<span style="margin-left: 10px; margin-right: 10px;">/</span></span><b>{{pathToSelectedFile.name}}</b></div><span ng-if="!(pathToSelectedFile.path_ids.length &gt; 0)">Sélectionner un fichier à afficher</span><button style="visibility: hidden; width:1px;" class="btn btn-default"><i class="glyphicon glyphicon-cloud-download"></i></button><button style="float: right;" uib-tooltip="Télécharger le fichier" tooltip-placement="bottom" ng-show="pathToSelectedFile.path_ids.length &gt; 0" ng-click="download(pathToSelectedFile.url, pathToSelectedFile.name)" class="btn btn-default"><i class="glyphicon glyphicon-cloud-download"></i></button></div><div class="panel-body"><div class="panel panel-default"><div style="height: 100%;" class="panel-body"><iframe id="iframeContent" style="border: none; width: 100%; height: 100%;" ng-style="containerFrameHeight" src="data:text/html;charset=utf-8, "></iframe></div></div><!--divinput(type="file", file-model="fileToUpload")
+button.btn.btn-primary(ng-click="uploadFile()") Envoyer
+button.btn.btn-primary(ng-click="listFiles()") Lister
+
+--></div></div></div><script type="text/ng-template" id="uploadFilePopup.html"><div class="modal-header col-xs-12"><h3 class="modal-title"><i class="glyphicon glyphicon-cloud-upload col-xs-1"></i><div style="text-align: center;" class="col-xs-10">Ajouter des fichiers</div><div class="col-xs-1"><img src="/images/progress_small.gif" alt="Infinite progress bar" ng-show="uploadLoading"/></div></h3></div><div class="modal-body"><h4>Sélectionner les fichiers à envoyer.</h4><input type="file" file-model="fileToUpload"/><br/><div dropzone="dropzone" style="border: 5px dashed lightgray; border-radius: 0px; color: #337ab7; text-align: center;" class="well well-lg"><h4>Glisser-déposer les fichiers ici pour les envoyers</h4><i style="font-size: 3em;" class="glyphicon glyphicon-cloud-upload"></i></div></div><div class="modal-footer"><div class="col-xs-12"><div style="text-align: left;" class="col-xs-4"><button ng-click="close()" ng-disabled="uploadLoading" class="btn btn-default">Fermer</button></div><div class="col-xs-8"><button ng-click="" class="btn btn-danger">Réinitialiser</button><button ng-click="uploadFile()" class="btn btn-success">Envoyer les fichiers</button></div></div></div></script><!--script(type="text/ng-template", id="uploadFileModel.html").modal-header
+	h3.modal-title
+		i.glyphicon.glyphicon-open(style="margin-right:20px; float:left;")
+		div(style="text-align: center;")
+			| Ajouter des fichiers
+.modal-body
+	p.
+		Ajouter les fichiers dans : {{path}}
+	p
+		br
+		input(type="file", nv-file-select="", uploader="uploader", multiple="")
+		br
+		| ou
+
+	div(nv-file-drop="", uploader="uploader")
+		.well.well-lg(style="border: 5px dashed lightgray;", ng-style="dropStyle",
+			nv-file-over="", uploader="uploader")
+			div(style="text-align: center; color: lightgray; font-size: 5em; text-decoration: bold;")
+				| Déposer vos fichiers ici
+
+	table.table
+		thead
+			th(width="50%") Nom du fichier
+			th(ng-show="uploader.isHTML5") Taille
+			th(ng-show="uploader.isHTML5") Progression
+			th Status
+			th Actions
+		tbody
+			tr(ng-repeat="item in uploader.queue")
+				td
+					strong {{item.file.name}}
+				td(ng-show="uploader.isHTML5", nowrap="") {{item.file.size}}
+				td(ng-show="uploader.isHTML5")
+					.progress(style="margin-bottom: 0;")
+						.progress-bar(role="progressbar", ng-style="{'width': item.progress + '%'}")
+				td.text-center
+					span(ng-show="item.isSuccess")
+						i.glyphicon.glyphicon-ok
+					span(ng-show="item.isCancel")
+						i.glyphicon.glyphicon-ban-circle
+					span(ng-show="item.isError")
+						i.glyphicon.glyphicon-remove
+				td(nowrap="")
+					button.btn.btn-success.btn-xs(type="button", ng-click="item.upload()", ng-disabled="item.isReady || item.isUploading || item.isSuccess")
+						span.glyphicon.glyphicon-upload
+						| Téléverser
+					button.btn.btn-warning.btn-xs(type="button", ng-click="item.cancel()", ng-disabled="!item.isUploading")
+						span.glyphicon.glyphicon-ban-circle
+						| Annuler
+					button.btn.btn-danger.btn-xs(type="button", ng-click="item.remove()", ng-disabled="!uploader.queue.length")
+						span.glyphicon.glyphicon-trash
+						| Supprimer
+	div
+		div
+			| Progression
+			.progress
+				.progress-bar(role="progressbar", ng-style="{width: uploader.progress + '%'}")
+		button.btn.btn-success.btn-s(type="button", ng-click="uploader.uploadAll()", ng-disabled="!uploader.getNotUploadedItems().length")
+			span.glyphicon.glyphicon-upload
+			| Tout téléverser
+		button.btn.btn-warning.btn-s(type="button", ng-click="uploader.cancelAll()", ng-disabled="!uploader.isUploading")
+			span.glyphicon.glyphicon-ban-circle
+			| Tout annuler
+		button.btn.btn-danger.btn-s(type="button", ng-click="uploader.clearQueue()", ng-disabled="!uploader.queue.length")
+			span.glyphicon.glyphicon-trash
+			| Tout supprimer
+			
+
+.modal-footer
+	button.btn.btn-primary(type="button", ng-click="close()")
+		| Fermer-->
