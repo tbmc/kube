@@ -195,7 +195,8 @@ app.controller 'chatController', ['$scope',
 				if element
 					scrollPos = element.scrollTop
 					maxScrollPos = element.scrollHeight - element.clientHeight
-					tab.scrollBottom = (scrollPos == maxScrollPos)
+					temp = Math.abs(scrollPos - maxScrollPos)
+					tab.scrollBottom = (temp < 20)
 				# Ajout des données
 				appendDataOnTab(tab, data.results)
 				if data.previous

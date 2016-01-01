@@ -5,33 +5,33 @@ directoryRoute = "share/directories/"
 app.controller 'filesController', ['$scope', "preparedRequest",
 '$window', '$routeParams', "$uibModal", "fileUpload", "directoryCache",
 ($scope, pr, $window, $routeParams, $uibModal, fileUpload, directoryCache) ->
-	
 	# Permet de gérer l'affichage des fichiers
-
 	#console.log $routeParams.filename, $routeParams.path
-	
-
 	$scope.path = []
 	$scope.folders = []
 	$scope.files = []
 	path_folders = [1]
+	actual_folder = 1
 	$scope.loading = 0
+	$scope.pathToSelectedFile = {
+		url: ""
+		path_ids: []
+		name: ""
+	}
+		
 
 	$scope.back = ->
-		if path_folders.length <= 1
-			n = 1
-		else
+		if path_folders.length <= 0
+			return
+		n = path_folders.pop()
+		if actual_folder == n
 			n = path_folders.pop()
+		if !n
+			n = 1
 		$scope.loadDirectory(n, true)
 
-	$scope.uploadFile = ->
-		uploadUrl = window.api_server + fileRoute
-		fu = $scope.fileToUpload
-		console.log("File : " + fu)
-		fileUpload.uploadFileToUrl(fu, uploadUrl, "root", 1)
-
 	$scope.loadDirectory = (dir_id, notAdd) ->
-		$scope.loading = 3
+		$scope.loading += 3
 		loadPath(dir_id, notAdd)
 		loadDirectory(dir_id)
 		loadFiles(dir_id)
@@ -40,6 +40,7 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 	loadPath = (dir_id, notAdd) ->
 		if !notAdd
 			path_folders.push(dir_id)
+		actual_folder = dir_id
 		http = pr()
 		http.get(window.api_server + directoryRoute + dir_id + "/").
 			success((data) ->
@@ -64,18 +65,25 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 				$scope.loading-- 
 			)
 
-	$scope.printFile = (id, url) ->
+	$scope.printFile = (id, url, name, path_ids) ->
+		$scope.loading++
+		$scope.pathToSelectedFile = {
+			url: url
+			path_ids: path_ids
+			name: name
+		}
 		http = pr()
 		http.get(url).
 		success((data) ->
-			type = "text/html"
-			console.log(escape(data))
+			type = "text/plain"
 			#angular.element("#iframeContent").attr("src",
 			#	"data:" + type + ";charset=utf8" + escape(data))
 			e = document.getElementById("iframeContent")
-			e.setAttribute("src", "data:" + type + ";charset=utf8," + textToHtml(data))
+			e.setAttribute("src", "data:" + type + ";charset=iso-8859-15," + escape(data))
 			#resizeIframe(e)
+			$scope.loading--
 		)
+		refreshAngular()
 
 	$scope.loadDirectory(1)
 
@@ -98,7 +106,11 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 		if w >= 992 && el
 			top = el.getBoundingClientRect().top
 			$scope.containerFrameHeight = {
-				height: (h - top - 50) + "px"
+				height: (h - top - 100) + "px"
+			}
+		else if el
+			$scope.containerFrameHeight = {
+				"min-height": "500px"
 			}
 		refreshAngular($scope)
 
@@ -108,8 +120,18 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 	angular.element(document).ready(->
 		resizeWindow()
 	)
+	$scope.download = (url, name) ->
+		#console.log(url)
+		#window.location.href = url
+		xhr = new XMLHttpRequest()
+		xhr.onreadystatechange = ->
+			if this.readyState == 4 and this.status == 200
+				#console.log(this.response, typeof this.response)
+				saveAs(this.response, name, true)
+		xhr.open("GET", url)
+		xhr.responseType = "blob"
+		xhr.send()
 ]
-
 
 textToHtml = (text) ->
 	debut = "<html><head></head><body><pre>"
@@ -135,6 +157,7 @@ toPrint = (file) ->
 		url: file.file
 		parent: file.parent
 		id: file.id
+		path_ids: file.path_ids
 	}
 	return out
 
@@ -145,6 +168,11 @@ app.controller("uploadControllerPopupController", ["$scope", "$uibModalInstance"
 	$scope.close = ->
 		$uibModalInstance.dismiss("cancel")
 
+	$scope.uploadFile = ->
+		uploadUrl = window.api_server + fileRoute
+		fu = $scope.fileToUpload
+		console.log("File : " + fu)
+		fileUpload.uploadFileToUrl(fu, uploadUrl, fu.name, 1)
 
 ])
 

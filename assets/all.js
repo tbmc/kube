@@ -11,4 +11,6 @@
 
 //= require librairies/angular_init.js
 
+//= require librairies/FileSaver.min.js
+
 //= require_tree js

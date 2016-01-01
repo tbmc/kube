@@ -38,7 +38,7 @@ app.controller 'allPageController', ['$scope', '$http', '$location', '$animate',
 	connect_at_startup = ->
 		#cookie = $cookies.getObject 'karibouCookie'
 		cookie = localStorage['karibouCookie']
-		console.log cookie, typeof cookie
+		#console.log cookie, typeof cookie
 		if cookie and cookie != "undefined"
 			cookie = JSON.parse cookie
 			$scope.previousConnection = true

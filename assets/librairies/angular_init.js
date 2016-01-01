@@ -52,8 +52,8 @@ app.service('fileUpload', ['preparedRequest', function (pr) {
     this.uploadFileToUrl = function(file, uploadUrl, name, parent){
         var fd = new FormData();
         fd.append('file', file);
-        fd.append("name", "fileName")
-        fd.append("parent", 1)
+        fd.append("name", name)
+        fd.append("parent", parent)
         //fd.append("creator", 1)
 
         var http = pr();

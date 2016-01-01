@@ -10,8 +10,8 @@ app.controller 'headController', ["$scope", ($scope) ->
 		$scope.link = defaultValue
 
 	nav = getNavigator()
-	if nav.safari || nav.ie # || nav.opera
-		$scope.link = "lol.css"
+	#if nav.safari || nav.ie # || nav.opera
+		#$scope.link = "lol.css"
 
 	$scope.$on('changingThemeEvent', (event, data) ->
 		event.defaultPrevented = true
