@@ -30,11 +30,11 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 			n = 1
 		$scope.loadDirectory(n, true)
 
-	$scope.loadDirectory = (dir_id, notAdd) ->
+	$scope.loadDirectory = (dir_id, notAdd, notRemoveWhenLoading) ->
 		$scope.loading += 3
 		loadPath(dir_id, notAdd)
-		loadDirectory(dir_id)
-		loadFiles(dir_id)
+		loadDirectory(dir_id, notRemoveWhenLoading)
+		loadFiles(dir_id, notRemoveWhenLoading)
 
 	$scope.cache = directoryCache
 	loadPath = (dir_id, notAdd) ->
@@ -48,16 +48,18 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 				$scope.loading-- 
 			)
 
-	loadDirectory = (dir_id) ->
-		$scope.folders = []
+	loadDirectory = (dir_id, notRemoveWhenLoading) ->
+		if !notRemoveWhenLoading
+			$scope.folders = []
 		http = pr()
 		http.get(window.api_server + directoryRoute + "?parent=" + dir_id).
 			success( (data) ->
 				$scope.folders = toPrintArray(data)
 				$scope.loading-- 
 			)
-	loadFiles = (dir_id) ->
-		$scope.files = []
+	loadFiles = (dir_id, notRemoveWhenLoading) ->
+		if !notRemoveWhenLoading
+			$scope.files = []
 		http = pr()
 		http.get(window.api_server + fileRoute + "?parent=" + dir_id).
 			success( (data) ->
@@ -65,6 +67,7 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 				$scope.loading-- 
 			)
 
+	style = "border: none; width: 100%; height: 100%;"
 	$scope.printFile = (id, url, name, path_ids) ->
 		$scope.loading++
 		$scope.pathToSelectedFile = {
@@ -72,21 +75,25 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 			path_ids: path_ids
 			name: name
 		}
-		http = pr()
-		http.get(url).
-		success((data) ->
-			type = "text/plain"
-			#angular.element("#iframeContent").attr("src",
-			#	"data:" + type + ";charset=utf8" + escape(data))
+		eid = "iframeContent"
+		e = document.getElementById(eid)
+		if e
+			parent = e.parentElement
+			parent.removeChild(e)
+		parent = document.getElementById("embedContainer")
+		embed = document.createElement("EMBED")
+		parent.appendChild(embed)
+		embed.setAttribute("style", style)
+		embed.setAttribute("id", eid)
+		downloadAsBlob(url, name, (data) ->
 			e = document.getElementById("iframeContent")
-			e.setAttribute("src", "data:" + type + ";charset=iso-8859-15," + escape(data))
-			#resizeIframe(e)
-			$scope.loading--
+			urlFile = URL.createObjectURL(data)
+			e.setAttribute("src", urlFile)
+			e.setAttribute("style", style + "height:" + $scope.containerFrameHeight.height + ";")
 		)
 		refreshAngular()
 
 	$scope.loadDirectory(1)
-
 
 	# Permet de gérer la partie upload de fichiers
 	$scope.uploadLoading = false
@@ -97,7 +104,17 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 			controller: "uploadControllerPopupController"
 			size: "lg"
 			backdrop: "static"
+			resolve: {
+				folder_id: ->
+					return actual_folder
+			}
 		})
+		up.result.then((data) ->
+			$scope.refresh()
+		)
+
+	$scope.refresh = ->
+		$scope.loadDirectory(actual_folder, true, true)
 
 	resizeWindow = ->
 		w = $window.innerWidth
@@ -108,10 +125,12 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 			$scope.containerFrameHeight = {
 				height: (h - top - 100) + "px"
 			}
+			el.setAttribute("style", style + "height:" + $scope.containerFrameHeight.height + ";")
 		else if el
 			$scope.containerFrameHeight = {
 				"min-height": "500px"
 			}
+			el.setAttribute("style", style + "min-height:500px")
 		refreshAngular($scope)
 
 	angular.element($window).bind("resize", ->
@@ -121,61 +140,82 @@ app.controller 'filesController', ['$scope', "preparedRequest",
 		resizeWindow()
 	)
 	$scope.download = (url, name) ->
-		#console.log(url)
-		#window.location.href = url
-		xhr = new XMLHttpRequest()
-		xhr.onreadystatechange = ->
-			if this.readyState == 4 and this.status == 200
-				#console.log(this.response, typeof this.response)
-				saveAs(this.response, name, true)
-		xhr.open("GET", url)
-		xhr.responseType = "blob"
-		xhr.send()
+		downloadAsBlob(url, name, (data) ->
+			saveAs(data, name, true)
+		)
+
+	textToHtml = (text) ->
+		debut = "<html><head></head><body><pre>"
+		fin = "</pre></body></html>"
+		return debut + escape(text) + fin
+
+	toPrintArray = (source) ->
+		out = []
+		for a in source
+			out.push(toPrint(a))
+		return out
+
+	getOnlyFromParent = (array, parent) ->
+		out = {}
+		for key, a of array
+			if a.parent == parent
+				out[key] = a
+		return out
+
+	toPrint = (file) ->
+		out = {
+			name: file.name
+			url: file.file
+			parent: file.parent
+			id: file.id
+			path_ids: file.path_ids
+		}
+		return out
+
 ]
 
-textToHtml = (text) ->
-	debut = "<html><head></head><body><pre>"
-	fin = "</pre></body></html>"
-	return debut + escape(text) + fin
+app.controller("uploadControllerPopupController",
+["$scope", "$uibModalInstance", "fileUpload",
+"directoryCache", "preparedRequest", "folder_id"
+($scope, $uibModalInstance, fileUpload, directoryCache, pr, folder_id) ->
 
-toPrintArray = (source) ->
-	out = []
-	for a in source
-		out.push(toPrint(a))
-	return out
-
-getOnlyFromParent = (array, parent) ->
-	out = {}
-	for key, a of array
-		if a.parent == parent
-			out[key] = a
-	return out
-
-toPrint = (file) ->
-	out = {
-		name: file.name
-		url: file.file
-		parent: file.parent
-		id: file.id
-		path_ids: file.path_ids
+	$scope.uploadLoading = false
+	$scope.folder = {
+		id: []
+		path_ids: []
 	}
-	return out
+	$scope.folder_id = folder_id
+	$scope.cache = directoryCache
 
+	http = pr()
+	http.get(window.api_server + directoryRoute + folder_id + "/").
+	success((data) ->
+		$scope.folder = {
+			path_ids: data.path_ids
+			id: data.id
+		}
+	)
 
-
-app.controller("uploadControllerPopupController", ["$scope", "$uibModalInstance", "fileUpload", 
-($scope, $uibModalInstance, fileUpload) ->
 	$scope.close = ->
-		$uibModalInstance.dismiss("cancel")
+		$uibModalInstance.close({
+			
+		})
 
 	$scope.uploadFile = ->
+		$scope.uploadLoading = true
 		uploadUrl = window.api_server + fileRoute
 		fu = $scope.fileToUpload
-		console.log("File : " + fu)
-		fileUpload.uploadFileToUrl(fu, uploadUrl, fu.name, 1)
+		fileUpload.uploadFileToUrl(fu, uploadUrl, fu.name, $scope.folder_id, (success) ->
+			if success
+				$scope.uploadLoading = false
+		)
 
 ])
 
+
+
+
+###
 app.controller "ModalUploadFileController", ["$scope", "$uibModalInstance", "FileUploader", "$window",
 ($scope, $uibModalInstance, FileUploader, $window) ->
 
@@ -197,3 +237,5 @@ app.controller "ModalUploadFileController", ["$scope", "$uibModalInstance", "Fil
 			$scope.$apply()
 	resize()
 ]
+###
+

@@ -61,15 +61,40 @@ getNavigator = ->
 
 app.factory 'preparedRequest', ["$http", ($http) ->
 	return ->
-		token = window.karibou.token
-		if !token or token == "undefined"
-			cookie = localStorage['karibouCookie']
-			if cookie and cookie != "undefined"
-				cookie = JSON.parse cookie
-				token = cookie.token
+		token = getToken()
 		$http.defaults.headers.common['Authorization'] = 'Token ' + token
 		return $http
 ]
+
+getToken = ->
+	token = window.karibou.token
+	if !token or token == "undefined"
+		cookie = localStorage['karibouCookie']
+		if cookie and cookie != "undefined"
+			cookie = JSON.parse cookie
+			token = cookie.token
+	return token
+
+downloadAsBlob = (url, name, callback) ->
+	xhr = new XMLHttpRequest()
+	xhr.onreadystatechange = ->
+		if this.readyState == 4 and this.status == 200
+			callback(this.response, name)
+	xhr.open("GET", url)
+	xhr.setRequestHeader("Authorization", "Token " + getToken())
+	xhr.responseType = "blob"
+	xhr.send()
+
+getMimeType = (name, isJustExt) ->
+	if !isJustExt
+		index = name.lastIndexOf('.')
+		if index == -1
+			index = 0
+		ext = name.substring(index)
+	else
+		ext = name
+	type = window.mimeTypeExtension[ext] || "text/plain"
+
 
 app.factory("directoryCache", ["preparedRequest", "$rootScope", (pr, $rootScope) ->
 	cache = {}

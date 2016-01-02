@@ -49,7 +49,7 @@ app.directive('fileModel', ['$parse', function ($parse) {
 }]);
 
 app.service('fileUpload', ['preparedRequest', function (pr) {
-    this.uploadFileToUrl = function(file, uploadUrl, name, parent){
+    this.uploadFileToUrl = function(file, uploadUrl, name, parent, callback){
         var fd = new FormData();
         fd.append('file', file);
         fd.append("name", name)
@@ -66,8 +66,10 @@ app.service('fileUpload', ['preparedRequest', function (pr) {
             }
         })
         .success(function(){
+            callback(true)
         })
         .error(function(){
+            callback(false)
         });
     }
 }]);
